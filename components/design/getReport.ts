@@ -1,7 +1,11 @@
 import { html, render } from "lit-html";
 import { DesignTemplate, LineElementForces } from "./data-model";
 import { Components, ComponentsType, Mesh } from "../data-model";
-import { LoadSelection, LOAD_SELECTION_LABELS, ULS_COMBINATIONS } from "../loads/data-model";
+import {
+  LoadSelection,
+  LOAD_SELECTION_LABELS,
+  ULS_COMBINATIONS,
+} from "../loads/data-model";
 
 const toggleStates = new Map<string, boolean>();
 
@@ -110,8 +114,7 @@ export function getReport({
             }
 
             const report = template.getReport({
-              params: (component.params ??
-                template.defaultParams) as Parameters<
+              params: ({ ...template.defaultParams, ...component.params }) as Parameters<
                 typeof template.getReport
               >[0]["params"],
               design: designs?.get(lineId),
@@ -146,7 +149,7 @@ export function getReport({
                   <span style="color: var(--text-secondary); font-size: 0.7rem;"
                     >${isOpen ? "▼" : "▶"}</span
                   >
-                  <span style="font-weight: 500;">Member #${lineId}</span>
+                  <span style="font-weight: 500;">Member ${lineId}</span>
                   <span style="color: var(--text-secondary); font-size: 0.8rem;"
                     >· ${component.name}</span
                   >

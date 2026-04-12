@@ -19,8 +19,7 @@ import {
 } from "@awatif/components";
 import {
   getDisplay,
-  getTooltips,
-  getAnalysisStatus,
+  getDocs,
   getLayout,
   getViewer,
   getComponents,
@@ -53,7 +52,7 @@ const components: Components = van.state(
           templateId: "point-load",
           geometry: [2],
           params: {
-            Fx: 400,
+            Fx: 300,
             Fy: 0,
             Fz: 0,
             Mx: 0,
@@ -123,6 +122,7 @@ const display: Display = {
     size: van.state(10),
     spacing: van.state(0.5),
   },
+  displayScale: van.state(1),
   geometry: van.state(true),
   mesh: van.state(true),
   deformedShape: van.state(true),
@@ -131,7 +131,8 @@ const display: Display = {
   releases: van.state(true),
   memberIndex: van.state(false),
   extrudeSections: van.state(false),
-  lineResult: van.state("Bendings"),
+  pointResult: van.state("None"),
+  lineResult: van.state("None"),
   loadCase: van.state<LoadSelection>("dead"),
 };
 
@@ -169,6 +170,8 @@ van.derive(() => {
       geometryMapping: mesh.geometryMapping.val,
       templates,
       activeLoadCase: display.loadCase?.val,
+      nodes: mesh.nodes.val,
+      elements: mesh.elements.val,
     });
 
     // Supports events
@@ -252,6 +255,10 @@ van.derive(() => {
       templates,
       activeLoadCase: display.loadCase?.val,
     });
+  } else if (canvasButton.val === CanvasButtons.DOCS) {
+    display.memberIndex.val = false;
+
+    canvas.val = getDocs();
   } else {
     display.memberIndex.val = false;
 
@@ -263,7 +270,12 @@ document.body.append(
   getLayout({
     viewer: getViewer({ geometry, mesh, components, display, templates }),
     display: getDisplay({ display }),
-    header: [getCanvasBar({ canvasButton })],
+    header: [
+      getCanvasBar({
+        canvasButton,
+        buttons: [CanvasButtons.DOCS, CanvasButtons.REPORT],
+      }),
+    ],
     canvas: getCanvas({ canvas, canvasButton }),
     components: getComponents({
       geometry,
@@ -271,7 +283,8 @@ document.body.append(
       componentsBarMode,
       templates,
       loadCase: display.loadCase,
+      analysisStatus,
+      display,
     }),
-    footer: [getAnalysisStatus(analysisStatus, display), getTooltips()],
   }),
 );

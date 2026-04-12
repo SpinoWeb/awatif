@@ -1,3 +1,5 @@
+// Duplicated from awatif/ui/viewer/text/getText.ts to keep @awatif/components self-contained.
+// If you update one, update the other.
 import * as THREE from "three";
 
 // Texture cache for repeated text values
@@ -66,7 +68,7 @@ export function getText(
       context.lineTo(x, y + r);
       context.quadraticCurveTo(x, y, x + r, y);
       context.closePath();
-      
+
       context.fill();
       context.stroke();
     }

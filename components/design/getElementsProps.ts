@@ -1,6 +1,6 @@
 import { DesignTemplate } from "./data-model";
 import { Components, ComponentsType } from "../data-model";
-import type { ActiveAnalysis } from "@awatif/ui";
+import type { ActiveAnalysis } from "./data-model";
 
 export function getElementsProps({
   components,
@@ -14,7 +14,7 @@ export function getElementsProps({
     lineToElements: Map<number, number[]>;
   };
   templates: Map<ComponentsType, Map<string, any>>;
-  activeAnalysis?: ActiveAnalysis["val"];
+  activeAnalysis?: ActiveAnalysis;
 }): Map<
   number,
   {
@@ -49,7 +49,7 @@ export function getElementsProps({
       if (!elementIndices) return;
 
       const props = template.getElementsProps({
-        params: (component.params ?? template.defaultParams) as any,
+        params: ({ ...template.defaultParams, ...component.params }) as any,
         activeAnalysis: activeAnalysis ?? "linear",
       });
 

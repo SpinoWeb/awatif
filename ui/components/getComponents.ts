@@ -15,12 +15,14 @@ import {
   getAnalysisList,
   ActiveAnalysis,
 } from "./analysisList/getAnalysisList";
+import { AnalysisStatus } from "../analysisStatus/getAnalysisStatus";
 
 import "./styles.css";
 
-function getTypesForMode(
-  mode: ComponentsType | null,
-): { types: ComponentsType[]; geometryKind: "point" | "line" | null } {
+function getTypesForMode(mode: ComponentsType | null): {
+  types: ComponentsType[];
+  geometryKind: "point" | "line" | null;
+} {
   switch (mode) {
     case ComponentsType.LOADS:
       return { types: [ComponentsType.LOADS], geometryKind: "point" };
@@ -34,7 +36,11 @@ function getTypesForMode(
       return { types: [ComponentsType.IMPERFECTIONS], geometryKind: "line" };
     case ComponentsType.SPECIAL:
       return {
-        types: [ComponentsType.MESH, ComponentsType.IMPERFECTIONS, ComponentsType.RELEASES],
+        types: [
+          ComponentsType.MESH,
+          ComponentsType.IMPERFECTIONS,
+          ComponentsType.RELEASES,
+        ],
         geometryKind: "line",
       };
     default:
@@ -49,6 +55,8 @@ export function getComponents({
   templates,
   activeAnalysis,
   loadCase,
+  analysisStatus,
+  display,
 }: {
   geometry: Geometry;
   components: Components;
@@ -56,14 +64,26 @@ export function getComponents({
   templates?: typeof Templates;
   activeAnalysis?: ActiveAnalysis;
   loadCase?: State<LoadSelection>;
+  analysisStatus?: AnalysisStatus;
+  display?: { memberIndex: State<boolean> };
 }): HTMLElement {
   const container = document.createElement("div");
   const activeComponent = van.state<ActiveComponent>(null);
 
   const types = van.derive(() => getTypesForMode(componentsBarMode.val).types);
-  const geometryKind = van.derive(
-    () => getTypesForMode(componentsBarMode.val).geometryKind,
-  );
+  const geometryKind = van.derive(() => {
+    const mode = componentsBarMode.val;
+    const baseKind = getTypesForMode(mode).geometryKind;
+    // TODO: extra logic due to inadequate data structure - the geometry kind should really be stored at the template level, not component type
+    if (mode === ComponentsType.LOADS && activeComponent.val !== null) {
+      const active = activeComponent.val;
+      const templateId = (components.val.get(active.type) ?? [])[active.index]
+        ?.templateId;
+      const template = templates?.get(active.type)?.get(templateId);
+      return (template?.geometryKind ?? baseKind) as "point" | "line" | null;
+    }
+    return baseKind;
+  });
 
   const list = getList({
     types,
@@ -82,7 +102,13 @@ export function getComponents({
     activeAnalysis,
   });
 
-  const componentsBar = getComponentsBar({ componentsBarMode, activeAnalysis, loadCase });
+  const componentsBar = getComponentsBar({
+    componentsBarMode,
+    activeAnalysis,
+    loadCase,
+    analysisStatus,
+    display,
+  });
   const analysisList = getAnalysisList({ componentsBarMode, activeAnalysis });
 
   const template = html`

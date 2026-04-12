@@ -43,7 +43,12 @@ export function getMemberIndex({
         (startPoint[2] + endPoint[2]) / 2,
       ];
 
-      group.add(getText(`#${lineId}`, midpoint, "#fff", 0.5 * s));
+      group.add(
+        getText(`${lineId}`, midpoint, "#ffffff", 0.3 * s, {
+          backgroundColor: "rgba(0, 0, 0, 0.5)",
+          borderRadius: 30,
+        }),
+      );
     });
 
     render();

@@ -73,6 +73,17 @@ export const genericMember: DesignTemplate<GenericMemberParams, any> = {
     };
   },
 
+  getSection: () => {
+    const halfSize = 0.05; // 300 mm / 2
+
+    return [
+      [-halfSize, -halfSize],
+      [halfSize, -halfSize],
+      [halfSize, halfSize],
+      [-halfSize, halfSize],
+    ];
+  },
+
   getReport: ({ params }: { params: GenericMemberParams }) => {
     return html`
       <div

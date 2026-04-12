@@ -1,5 +1,4 @@
 import * as THREE from "three";
-import van from "vanjs-core";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
 import {
   Geometry,
@@ -8,6 +7,7 @@ import {
   templates as Templates,
 } from "@awatif/components";
 import { getGrid } from "./grid/getGrid";
+import { getAxes } from "./axes/getAxes";
 import { getGeometry } from "./geometry/getGeometry";
 import { getMesh } from "./mesh/getMesh";
 import { getLoads } from "./loads/getLoads";
@@ -17,6 +17,7 @@ import { getMemberIndex } from "./memberIndex/getMemberIndex";
 import { getPointResults } from "./pointResult/getPointResults";
 import { getLineResults } from "./lineResult/getLineResults";
 import { getExtrudeSections } from "./extrudeSections/getExtrudeSections";
+import { getExtrudeSectionAnimation } from "./extrudeSections/getExtrudeSectionAnimation";
 import { Display } from "../display/getDisplay";
 
 import "./style.css";
@@ -31,10 +32,9 @@ export function getViewer({
   geometry?: Geometry;
   mesh?: Mesh;
   components?: Components;
-  display?: Display;
+  display: Display;
   templates?: typeof Templates;
 }): HTMLDivElement {
-  THREE.Object3D.DEFAULT_UP = new THREE.Vector3(0, 0, 1);
   const scene = new THREE.Scene();
 
   const camera = new THREE.PerspectiveCamera(
@@ -43,6 +43,7 @@ export function getViewer({
     0.1,
     1000,
   );
+  camera.up.set(0, 1, 0);
 
   const renderer = new THREE.WebGLRenderer({ antialias: true });
   renderer.setSize(window.innerWidth, window.innerHeight);
@@ -66,25 +67,19 @@ export function getViewer({
   controls.addEventListener("change", render);
 
   // Objects
-  const grid = {
-    size: display?.grid?.size ?? van.state(10),
-    spacing: display?.grid?.spacing ?? van.state(1),
-  };
-
-  const displayScale = van.state(grid.size.rawVal / 10);
-  van.derive(() => {
-    displayScale.val = grid.size.val / 10;
-  });
+  const grid = display.grid;
+  const displayScale = display.displayScale;
 
   camera.position.set(
     grid.size.rawVal / 2,
     grid.size.rawVal / 2,
-    7 * (grid.size.rawVal / 10),
+    8 * (grid.size.rawVal / 10),
   );
   controls.target.set(grid.size.rawVal / 2, grid.size.rawVal / 2, 0);
   controls.update();
 
   scene.add(getGrid({ grid, render }));
+  scene.add(getAxes({ displayScale, render }));
 
   if (geometry)
     scene.add(
@@ -99,7 +94,7 @@ export function getViewer({
       }),
     );
 
-  if (mesh)
+  if (mesh) {
     scene.add(
       getMesh({
         mesh,
@@ -107,6 +102,25 @@ export function getViewer({
         display,
       }),
     );
+
+    scene.add(
+      getPointResults({
+        mesh,
+        display: display.pointResult,
+        displayScale,
+        render,
+      }),
+    );
+
+    scene.add(
+      getLineResults({
+        mesh,
+        display: display.lineResult,
+        displayScale,
+        render,
+      }),
+    );
+  }
 
   if (components && geometry && templates) {
     scene.add(
@@ -150,9 +164,7 @@ export function getViewer({
         display,
       }),
     );
-  }
 
-  if (geometry && components && templates && display?.extrudeSections) {
     scene.add(
       getExtrudeSections({
         geometry,
@@ -162,28 +174,13 @@ export function getViewer({
         render,
       }),
     );
-  }
 
-  if (mesh && display?.pointResult) {
-    scene.add(
-      getPointResults({
-        mesh,
-        display: display.pointResult,
-        displayScale,
-        render,
-      }),
-    );
-  }
-
-  if (mesh && display?.lineResult) {
-    scene.add(
-      getLineResults({
-        mesh,
-        display: display.lineResult,
-        displayScale,
-        render,
-      }),
-    );
+    getExtrudeSectionAnimation({
+      camera,
+      controls,
+      display,
+      render,
+    });
   }
 
   render();
